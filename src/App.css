@@ -133,6 +133,12 @@ button.secondary {
   color: var(--coral);
 }
 
+.interval-list {
+  display: grid;
+  gap: 16px;
+  margin-top: 16px;
+}
+
 /* ---------- Ticket stub ---------- */
 
 .ticket {

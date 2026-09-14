@@ -82,3 +82,19 @@ export async function fetchDraw(slug, concurso) {
   }
   return result;
 }
+
+// Busca vários concursos de uma loteria, sequencialmente (um fetch por vez,
+// reutilizando fetchDraw), chamando onProgress a cada concurso resolvido.
+// Modo de intervalo: se um concurso falhar, a falha propaga e derruba a
+// busca inteira — isolamento por item é tratado à parte (ticket 03).
+export async function fetchDrawRange(slug, concursos, onProgress) {
+  const results = [];
+  for (let i = 0; i < concursos.length; i++) {
+    const concurso = concursos[i];
+    const draw = await fetchDraw(slug, concurso);
+    const item = { concurso, status: "ok", draw };
+    results.push(item);
+    if (onProgress) onProgress(item, i + 1, concursos.length);
+  }
+  return results;
+}

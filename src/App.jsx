@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { LOTTERY_LIST, LOTTERIES } from "./lotteries";
-import { fetchDraw } from "./api";
+import { fetchDraw, fetchDrawRange } from "./api";
+import { validateIntervalo } from "./intervalValidation";
 import { loadGames, addGame, removeGame } from "./storage";
 import NumberPicker from "./NumberPicker";
 import DrawTicket from "./DrawTicket";
@@ -15,6 +16,10 @@ export default function App() {
   const [error, setError] = useState(null);
   const [newNumbers, setNewNumbers] = useState([]);
   const [ownerLabel, setOwnerLabel] = useState("");
+  const [deInput, setDeInput] = useState("");
+  const [ateInput, setAteInput] = useState("");
+  const [intervalResults, setIntervalResults] = useState([]);
+  const [intervalProgress, setIntervalProgress] = useState(null);
 
   const active = LOTTERIES[activeSlug];
 
@@ -23,6 +28,10 @@ export default function App() {
     setError(null);
     setConcursoInput("");
     setNewNumbers([]);
+    setDeInput("");
+    setAteInput("");
+    setIntervalResults([]);
+    setIntervalProgress(null);
   }, [activeSlug]);
 
   const gamesForActive = useMemo(
@@ -33,6 +42,8 @@ export default function App() {
   async function handleFetch(useLatest) {
     setLoading(true);
     setError(null);
+    setIntervalResults([]);
+    setIntervalProgress(null);
     try {
       const result = await fetchDraw(
         active.slug,
@@ -42,6 +53,31 @@ export default function App() {
     } catch (err) {
       setError(err.message);
       setDraw(null);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleFetchRange() {
+    const validated = validateIntervalo(deInput, ateInput);
+    if (!validated.ok) {
+      setError(validated.message);
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    setDraw(null);
+    setIntervalResults([]);
+    setIntervalProgress({ done: 0, total: validated.concursos.length });
+    try {
+      await fetchDrawRange(active.slug, validated.concursos, (item, done, total) => {
+        setIntervalResults((prev) => [...prev, item]);
+        setIntervalProgress({ done, total });
+      });
+    } catch (err) {
+      setError(err.message);
+      setIntervalResults([]);
+      setIntervalProgress(null);
     } finally {
       setLoading(false);
     }
@@ -109,11 +145,56 @@ export default function App() {
             </button>
           </div>
 
-          {loading && <p className="status">Buscando resultado…</p>}
+          <div className="fetch-row">
+            <input
+              type="number"
+              inputMode="numeric"
+              placeholder="de"
+              value={deInput}
+              onChange={(e) => setDeInput(e.target.value)}
+              aria-label="Concurso inicial do intervalo"
+            />
+            <input
+              type="number"
+              inputMode="numeric"
+              placeholder="até"
+              value={ateInput}
+              onChange={(e) => setAteInput(e.target.value)}
+              aria-label="Concurso final do intervalo"
+            />
+            <button
+              onClick={handleFetchRange}
+              disabled={loading || !deInput || !ateInput}
+            >
+              Buscar intervalo
+            </button>
+          </div>
+
+          {loading && !intervalProgress && (
+            <p className="status">Buscando resultado…</p>
+          )}
+          {loading && intervalProgress && (
+            <p className="status">
+              Buscando concursos… ({intervalProgress.done}/{intervalProgress.total})
+            </p>
+          )}
           {error && <p className="status status-error">{error}</p>}
 
           {draw && (
             <DrawTicket lottery={active} draw={draw} games={gamesForActive} />
+          )}
+
+          {intervalResults.length > 0 && (
+            <div className="interval-list">
+              {intervalResults.map((item) => (
+                <DrawTicket
+                  key={item.concurso}
+                  lottery={active}
+                  draw={item.draw}
+                  games={gamesForActive}
+                />
+              ))}
+            </div>
           )}
         </section>
 
