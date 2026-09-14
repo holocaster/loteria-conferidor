@@ -1,7 +1,7 @@
-goal: null
-feature: null
+goal: Buscar intervalo de concursos e conferir jogos salvos contra todos eles
+feature: 0001-multi-concurso
 context: docs/CONTEXT.md
-brief: null
+brief: docs/briefs/0001-multi-concurso.md
 spec: null
 tickets_index: null
 active_ticket: null
@@ -10,4 +10,4 @@ head_sha: null
 review: null
 review_round: 0
 blockers: []
-next_action: run sizing / discovery for the current request
+next_action: spawn sdd-planner with docs/briefs/0001-multi-concurso.md
