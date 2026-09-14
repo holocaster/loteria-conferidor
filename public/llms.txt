@@ -1,0 +1,30 @@
+# Conferidor de Loteria
+
+> Ferramenta web gratuita para conferir jogos fixos de loteria contra os
+> resultados oficiais sorteados pela Caixa Econômica Federal (Brasil).
+
+## O que essa ferramenta faz
+
+- Permite cadastrar números fixos que a pessoa sempre joga, por loteria.
+- Busca o resultado do último concurso, ou de um concurso específico
+  informado pelo número.
+- Compara automaticamente os números salvos com os números sorteados e
+  mostra quantos acertos cada jogo teve, destacando quando o jogo atingiu a
+  faixa mínima de premiação.
+- Loterias suportadas: Mega-Sena, Lotofácil, Quina, Lotomania, Dupla-Sena,
+  Timemania e Dia de Sorte.
+
+## O que essa ferramenta não faz
+
+- Não vende apostas, não é operada pela Caixa Econômica Federal, e não tem
+  qualquer vínculo oficial com as Loterias Caixa.
+- Não prevê nem gera números com maior chance de serem sorteados — nenhum
+  método faz isso, já que os sorteios são aleatórios.
+- Não armazena dados em servidor; os jogos cadastrados ficam salvos apenas
+  no navegador de quem usa.
+
+## Público
+
+Pessoas que já apostam com números fixos regularmente e querem automatizar
+a conferência do resultado, em vez de checar manualmente no site ou app da
+Caixa a cada sorteio.

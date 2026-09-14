@@ -1,0 +1,31 @@
+# Buscadores tradicionais
+User-agent: *
+Allow: /
+
+# Crawlers de IA / GEO — liberados explicitamente para que
+# assistentes como ChatGPT, Claude e Perplexity possam ler e citar o site.
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+Sitemap: https://SEU-DOMINIO-AQUI.com/sitemap.xml
