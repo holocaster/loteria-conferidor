@@ -1,33 +1,29 @@
-# Review — 02-modo-intervalo (rodada 1)
+# Review — 02-modo-intervalo (rodada 2 — final)
 
-status: changes_requested
+status: approved
 ticket: 0001-multi-concurso/02-modo-intervalo
-reviewed_range: cfeb367934ca01a6882217f4e3e3006f4c0a18f3..11438583e7e5d308200f1b9732d1c6b2499075fc
+reviewed_range: cfeb367934ca01a6882217f4e3e3006f4c0a18f3..993eb6aefee88159d8de47384582ac93b54e27cd
 
-## Finding importante — troca de loteria durante busca de intervalo em andamento
+## Finding da rodada 1 — corrigido
 
-**Local:** `src/App.jsx` (`handleFetchRange`, o `useEffect` de troca de `activeSlug`, as abas de loteria, o render do intervalo).
+A guarda por `activeSlugRef` cobre as três escritas (`intervalResults`, `intervalProgress`, `error`) e a limpeza final de progresso. Trocar de loteria durante uma busca em andamento não repopula mais a lista antiga contra a loteria nova. Verificado por leitura de código (a spec exclui teste de componente React/DOM deste projeto).
 
-**Impacto:** `handleFetchRange` captura `active.slug` uma única vez e o callback de progresso faz `setIntervalResults((prev) => [...prev, item])` sem checar se a loteria ativa ainda é a mesma. `fetchDrawRange` (src/api.js:90-100) não tem `AbortController` nem token de cancelamento — roda o laço até o fim mesmo depois da troca. O `useEffect([activeSlug])` limpa `intervalResults` no momento da troca, mas o laço em voo continua chamando o callback depois e repopula a lista — agora renderizada com `lottery={active}` e `games={gamesForActive}` da loteria **nova**. Resultado: jogos de uma loteria aparecem conferidos contra o sorteio de outra, com rótulo/cor do ticket errados. Sem crash — resultado silenciosamente incorreto, o pior tipo de falha aqui. Viola a user story 26 da spec ("nunca ver os jogos de uma loteria conferidos contra o sorteio de outra"). Janela de reprodução é larga (até 25 fetches sequenciais, ordem de segundos) e as abas não ficam desabilitadas durante a busca, então é um clique normal.
+Sugestão da rodada 1 (`intervalProgress` não limpo no sucesso) também endereçada.
 
-**Mudança exigida:** uma busca de intervalo iniciada para uma loteria não pode mais escrever em `intervalResults`/`intervalProgress` depois que a loteria ativa mudou. Qualquer guarda serve (comparar o slug de origem no callback, um contador de geração, ou cancelar a busca na troca). Resultado exigido: trocar de loteria durante uma busca em andamento deixa a lista do intervalo vazia, sem nenhum ticket da loteria anterior aparecendo depois.
+## Sugestões não-bloqueantes (novas, não impedem aprovação)
 
-## Sugestão (não bloqueia)
+1. A guarda compara só o slug — se a pessoa sair da loteria e voltar antes do lote terminar, o restante do lote volta a escrever na lista (resultado parcial, sem contaminação entre loterias). Opcional: trocar por um contador de geração.
+2. `loading` só libera quando o laço inteiro termina; trocar de loteria no meio de um lote longo deixa a loteria nova com os botões desabilitados por um tempo, sem indicação do motivo. Opcional: cancelar o lote na troca.
 
-`intervalProgress` não é zerado ao final de uma busca bem-sucedida (só no `catch`), e vira um discriminador implícito de modo pro texto de status. Não é bug hoje, mas é acoplamento latente. Considerar zerar `intervalProgress` no `finally` junto com `loading`, ou derivar o texto de status de um modo explícito.
+Nenhuma bloqueia — registradas para consciência futura, não como débito obrigatório.
 
 ## Checks (todos passaram)
 
-- `npx vitest run`: 2 arquivos, 13 testes, todos passando.
-- `npx oxlint`: exit 0, 1 warning pré-existente (`react(set-state-in-effect)`, já presente no base).
-- `npx vite build`: sucesso, 23 módulos.
-- `package-lock.json`: 22 entradas novas, todas `dev:true` — nenhuma dependência de produção.
-- Árvore limpa após os checks.
+- `npx vitest run`: 13 testes.
+- `npx oxlint`: exit 0, só o warning pré-existente.
+- `npx vite build`: sucesso.
+- Árvore limpa.
 
-## Critérios que passaram
+## Critérios
 
-Todos os demais critérios do ticket (validação de intervalo, busca em lote sequencial, forma estável do item, reuso do `DrawTicket`, indicador de progresso, exclusão mútua avulso/intervalo, testes de `intervalValidation` e `fetchDrawRange`, sem cache/persistência nova) — pass. Verificação manual no navegador: `not_verified` (ambiente do reviewer não tem browser/DOM; não é falha, é uma lacuna de evidência a fechar por quem for validar visualmente).
-
-## Risco residual
-
-Resiliência por concurso continua provisória por decisão do próprio ticket (uma falha derruba o lote inteiro) — correto, fica para o ticket 03.
+Todos os critérios do ticket — pass. Verificação manual no navegador: `not_verified` (ambiente do reviewer sem browser; lacuna de evidência, não falha).
