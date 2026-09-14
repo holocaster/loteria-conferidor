@@ -54,14 +54,16 @@ npx netlify deploy --prod --dir=dist
 Qualquer uma te dá um domínio próprio (ex: `conferidor.vercel.app`) na
 hora, e um domínio customizado depois se quiser.
 
+**VPS própria** — se preferir manter em servidor próprio (como as outras
+apps em `prsites.com.br`), use `deploy/nginx/*.conf` e
+`deploy/build-and-run.sh` como base. É o caminho usado em produção
+(`loteria.prsites.com.br`).
+
 ## Deixar o site "achável" pelo Google e por IAs (SEO + GEO)
 
 Depois de publicar, faça isso:
 
-1. **Troque `SEU-DOMINIO-AQUI.com`** pelo domínio real nos três arquivos:
-   `index.html` (tags `canonical` e `og:url`), `public/robots.txt` e
-   `public/sitemap.xml`.
-2. **Google Search Console** — cadastre o site em
+1. **Google Search Console** — cadastre o site em
    [search.google.com/search-console](https://search.google.com/search-console),
    verifique a propriedade e envie o `sitemap.xml`. Isso acelera bastante o
    Google encontrar e indexar a página.

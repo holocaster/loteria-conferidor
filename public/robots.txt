@@ -28,4 +28,4 @@ Allow: /
 User-agent: CCBot
 Allow: /
 
-Sitemap: https://SEU-DOMINIO-AQUI.com/sitemap.xml
+Sitemap: https://loteria.prsites.com.br/sitemap.xml
