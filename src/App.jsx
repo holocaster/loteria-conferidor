@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { LOTTERY_LIST, LOTTERIES } from "./lotteries";
 import { fetchDraw, fetchDrawRange } from "./api";
 import { validateIntervalo } from "./intervalValidation";
@@ -23,7 +23,16 @@ export default function App() {
 
   const active = LOTTERIES[activeSlug];
 
+  // Referência sempre atualizada da loteria ativa, lida dentro do callback de
+  // progresso de handleFetchRange — o closure da chamada captura a loteria de
+  // origem, mas só essa ref reflete uma troca de aba ocorrida no meio da
+  // busca. Sem isso, os itens que já estavam em voo continuariam escrevendo
+  // em intervalResults/intervalProgress depois da troca, misturando o
+  // sorteio de uma loteria com os jogos salvos de outra.
+  const activeSlugRef = useRef(activeSlug);
+
   useEffect(() => {
+    activeSlugRef.current = activeSlug;
     setDraw(null);
     setError(null);
     setConcursoInput("");
@@ -64,20 +73,27 @@ export default function App() {
       setError(validated.message);
       return;
     }
+    const requestSlug = active.slug;
     setLoading(true);
     setError(null);
     setDraw(null);
     setIntervalResults([]);
     setIntervalProgress({ done: 0, total: validated.concursos.length });
     try {
-      await fetchDrawRange(active.slug, validated.concursos, (item, done, total) => {
+      await fetchDrawRange(requestSlug, validated.concursos, (item, done, total) => {
+        if (activeSlugRef.current !== requestSlug) return;
         setIntervalResults((prev) => [...prev, item]);
         setIntervalProgress({ done, total });
       });
+      if (activeSlugRef.current === requestSlug) {
+        setIntervalProgress(null);
+      }
     } catch (err) {
-      setError(err.message);
-      setIntervalResults([]);
-      setIntervalProgress(null);
+      if (activeSlugRef.current === requestSlug) {
+        setError(err.message);
+        setIntervalResults([]);
+        setIntervalProgress(null);
+      }
     } finally {
       setLoading(false);
     }
