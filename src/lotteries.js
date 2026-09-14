@@ -66,3 +66,15 @@ export function countHits(savedNumbers, drawnNumbers) {
   const drawnSet = new Set(drawnNumbers.map(Number));
   return savedNumbers.filter((n) => drawnSet.has(Number(n))).length;
 }
+
+// Valor do prêmio pago por ganhador numa faixa de acertos. A Dupla-Sena
+// manda a lista de rateio dobrada (faixas do 1º sorteio seguidas das do 2º,
+// mesma ordem) — por isso "segments"/"segment" fatiam a lista pela metade
+// certa antes de procurar a faixa.
+export function findPrizeValue(rateioPremio, hits, segment = 0, segments = 1) {
+  if (!rateioPremio || !rateioPremio.length) return null;
+  const size = rateioPremio.length / segments;
+  const list = rateioPremio.slice(segment * size, (segment + 1) * size);
+  const entry = list.find((r) => r.descricaoFaixa === `${hits} acertos`);
+  return entry ? entry.valorPremio : null;
+}

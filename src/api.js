@@ -61,6 +61,7 @@ function normalize(raw) {
       "dataProximoConcurso",
       "dataProxConcurso",
     ]),
+    rateioPremio: pick(raw, ["listaRateioPremio"]) || [],
     raw,
   };
 }

@@ -1,4 +1,4 @@
-import { countHits } from "./lotteries";
+import { countHits, findPrizeValue } from "./lotteries";
 
 function formatMoney(value) {
   if (value === undefined || value === null) return null;
@@ -56,6 +56,15 @@ export default function DrawTicket({ lottery, draw, games }) {
             const won =
               hits >= lottery.prizeFrom ||
               (hits2 !== null && hits2 >= lottery.prizeFrom);
+            const segments = draw.dezenasSegundo ? 2 : 1;
+            const prize1 =
+              hits >= lottery.prizeFrom
+                ? findPrizeValue(draw.rateioPremio, hits, 0, segments)
+                : null;
+            const prize2 =
+              hits2 !== null && hits2 >= lottery.prizeFrom
+                ? findPrizeValue(draw.rateioPremio, hits2, 1, segments)
+                : null;
             const isHit = (n) =>
               draw.dezenas.includes(n) ||
               (draw.dezenasSegundo && draw.dezenasSegundo.includes(n));
@@ -78,6 +87,8 @@ export default function DrawTicket({ lottery, draw, games }) {
                       ? `1º sorteio: ${hits} acerto${hits === 1 ? "" : "s"} · 2º sorteio: ${hits2} acerto${hits2 === 1 ? "" : "s"}`
                       : `${hits} acerto${hits === 1 ? "" : "s"}`}
                     {won ? " — premiado!" : ""}
+                    {prize1 !== null ? ` ${formatMoney(prize1)}` : ""}
+                    {prize2 !== null ? ` (2º sorteio: ${formatMoney(prize2)})` : ""}
                   </span>
                 </div>
               </div>
