@@ -202,14 +202,20 @@ export default function App() {
 
           {intervalResults.length > 0 && (
             <div className="interval-list">
-              {intervalResults.map((item) => (
-                <DrawTicket
-                  key={item.concurso}
-                  lottery={active}
-                  draw={item.draw}
-                  games={gamesForActive}
-                />
-              ))}
+              {intervalResults.map((item) =>
+                item.status === "ok" ? (
+                  <DrawTicket
+                    key={item.concurso}
+                    lottery={active}
+                    draw={item.draw}
+                    games={gamesForActive}
+                  />
+                ) : (
+                  <p key={item.concurso} className="status status-error">
+                    {item.message}
+                  </p>
+                )
+              )}
             </div>
           )}
         </section>
