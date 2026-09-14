@@ -36,34 +36,24 @@ public/
   robots.txt, sitemap.xml, llms.txt   SEO + GEO (ver seção própria no README)
 ```
 
-## ⚠️ Risco #1 — formato da resposta da API não foi confirmado
+## ✅ Risco #1 — RESOLVIDO (verificado contra a API real em 2026-09-14)
 
-`src/api.js` chama `https://api.guidi.dev.br/loteria/<loteria>/<concurso|ultimo>`.
-Essa API é de terceiros (não é da Caixa), está ativa (README do projeto
-mostra uso em jun/2026), mas **eu não consegui de fato chamar o endpoint**
-durante o desenvolvimento — o ambiente onde montei isso só tinha acesso de
-rede a domínios de pacotes (npm, pip, etc.), não a APIs arbitrárias da web.
-Ou seja: o parsing em `normalize()` foi escrito com base no formato usado
-por APIs irmãs/similares (mesma origem de projeto), não confirmado contra
-o JSON real dessa API específica.
+Estava desatualizado: a branch `0001-multi-concurso` já trocou a fonte pra
+`https://servicebus2.caixa.gov.br/portaldeloterias/api/<loteria>[/<concurso>]`
+(API interna da Caixa — CORS liberado, `api.guidi.dev.br` foi descartada por
+bloquear CORS em teste real). `src/api.js` (comentário no topo do arquivo)
+já documenta essa decisão.
 
-**Primeiro passo ao continuar**: rodar o app, abrir o DevTools → Network,
-chamar `handleFetch`, e comparar o JSON retornado com as chaves que
-`normalize()` em `src/api.js` procura (`dezenas`, `concurso`, `data`,
-`acumulou`, etc.). Ajustar a lista de chaves em `pick(...)` se os nomes
-reais forem diferentes.
+Testado ao vivo nesta sessão com `curl` contra endpoints reais:
+- Mega-Sena e Lotofácil: `normalize()` bate campo a campo (`listaDezenas`,
+  `numero`, `dataApuracao`, `acumulado`, `localSorteio`,
+  `valorEstimadoProximoConcurso`, `dataProximoConcurso`).
+- Dupla-Sena: `listaDezenasSegundoSorteio` confere, e o 2º sorteio é
+  comparado separadamente em `DrawTicket.jsx`.
+- Concurso inválido/não sorteado (`megasena/99999`): API retorna HTTP 500
+  de fato — `fetchDraw` já trata isso via `!res.ok`.
 
-Se a API estiver instável ou bloqueando CORS de chamada direta do
-navegador, alternativas testadas por outros projetos (documentadas no
-README):
-- `https://servicebus2.caixa.gov.br/portaldeloterias/api/<loteria>` — API
-  interna da própria Caixa, mas não é pensada pra consumo externo, então
-  pode não ter CORS liberado para chamada direta do browser. Se travar por
-  CORS, provavelmente vai precisar de uma function serverless simples
-  (Vercel/Netlify) como proxy.
-- Forks tipo `loteriascaixa-api` — vários estão hospedados no Heroku free
-  tier, que foi descontinuado, então o endereço pode estar morto. Checar
-  antes de depender.
+Nenhuma mudança de código foi necessária. Não reabrir sem motivo novo.
 
 ## Risco #2 — só 7 loterias implementadas
 
@@ -84,13 +74,12 @@ dia isso importar de verdade, o caminho é migrar pra algo com SSR/SSG
 
 ## Pendências / próximos passos sugeridos
 
-1. Validar `normalize()` contra a resposta real da API (Risco #1).
-2. Trocar `SEU-DOMINIO-AQUI.com` pelo domínio real em `index.html`,
+1. Trocar `SEU-DOMINIO-AQUI.com` pelo domínio real em `index.html`,
    `robots.txt` e `sitemap.xml` — só depois do deploy, quando o domínio
    existir.
-3. Deploy em Vercel ou Netlify (comandos no README).
-4. Opcional: Super Sete e +Milionária, se fizerem falta.
-5. Opcional: mensagens de erro mais específicas quando a API não responde
+2. Deploy em Vercel ou Netlify (comandos no README).
+3. Opcional: Super Sete e +Milionária, se fizerem falta.
+4. Opcional: mensagens de erro mais específicas quando a API não responde
    (hoje é só uma string genérica).
 
 ## Onde não mexer sem necessidade
