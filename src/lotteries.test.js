@@ -9,6 +9,10 @@ describe("countHits", () => {
   it("devolve zero quando nenhum número bate", () => {
     expect(countHits([1, 2, 3], [4, 5, 6])).toBe(0);
   });
+
+  it("compara por valor numérico, não por tipo (string vs number)", () => {
+    expect(countHits(["1", "2", 3], [1, 2, 3])).toBe(3);
+  });
 });
 
 describe("findPrizeValue", () => {

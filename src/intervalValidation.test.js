@@ -51,4 +51,22 @@ describe("validateIntervalo", () => {
   it("expõe o teto de 25 como constante", () => {
     expect(MAX_INTERVALO).toBe(25);
   });
+
+  it("ignora espaços em volta dos números", () => {
+    const result = validateIntervalo("  3090 ", " 3092  ");
+    expect(result).toEqual({ ok: true, concursos: [3090, 3091, 3092] });
+  });
+
+  it("aceita zeros à esquerda", () => {
+    const result = validateIntervalo("007", "009");
+    expect(result).toEqual({ ok: true, concursos: [7, 8, 9] });
+  });
+
+  it.each([["3090.5", "3094"], ["3090", "3094.5"]])(
+    "recusa número decimal de=%s até=%s",
+    (de, ate) => {
+      const result = validateIntervalo(de, ate);
+      expect(result.ok).toBe(false);
+    }
+  );
 });
