@@ -4,7 +4,7 @@ Spec: `docs/specs/0002-concursos-pesquisados.md`
 
 | # | Title | Blocked by | Status |
 |---|-------|-----------|--------|
-| 01 | Concurso buscado fica salvo e aparece numa lista dentro do card | none | ready |
+| 01 | Concurso buscado fica salvo e aparece numa lista dentro do card | none | done |
 | 02 | Buscar de novo um concurso salvo não chama a API | 01 | ready |
 | 03 | Intervalo salva cada concurso e aproveita os que já estão salvos | 02 | ready |
 
