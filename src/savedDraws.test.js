@@ -1,5 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { loadSavedDraws, removeSavedDraw, getDraw, getLatestDraw } from "./savedDraws";
+import {
+  loadSavedDraws,
+  removeSavedDraw,
+  getDraw,
+  getLatestDraw,
+  getDrawRange,
+} from "./savedDraws";
 
 // Mesmo stub mínimo de storage.test.js — localStorage não existe no ambiente
 // node dos testes.
@@ -186,5 +192,106 @@ describe("savedDraws", () => {
     const saved = loadSavedDraws("megasena");
     expect(saved).toHaveLength(1);
     expect(saved[0].draw.data).toBe("02/02/2024");
+  });
+});
+
+describe("getDrawRange", () => {
+  beforeEach(() => {
+    vi.stubGlobal("localStorage", fakeLocalStorage());
+    vi.stubGlobal("fetch", vi.fn());
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+  });
+
+  it("busca todos os concursos e devolve itens ok na ordem do intervalo", async () => {
+    fetch.mockImplementation((url) => {
+      const concurso = url.split("/").pop();
+      return Promise.resolve(jsonResponse(drawPayload(Number(concurso))));
+    });
+
+    const onProgress = vi.fn();
+    const results = await getDrawRange(
+      "megasena",
+      [3090, 3091, 3092],
+      onProgress
+    );
+
+    expect(results).toHaveLength(3);
+    expect(results.map((r) => r.concurso)).toEqual([3090, 3091, 3092]);
+    expect(results.every((r) => r.status === "ok")).toBe(true);
+    expect(onProgress).toHaveBeenCalledTimes(3);
+  });
+
+  it("isola a falha de um concurso no meio do intervalo sem derrubar os demais e não salva o que falhou", async () => {
+    fetch.mockImplementation((url) => {
+      const concurso = Number(url.split("/").pop());
+      if (concurso === 3091) {
+        return Promise.resolve(jsonResponse(null, false, 500));
+      }
+      return Promise.resolve(jsonResponse(drawPayload(concurso)));
+    });
+
+    const results = await getDrawRange("megasena", [3090, 3091, 3092]);
+
+    expect(results.map((r) => r.concurso)).toEqual([3090, 3091, 3092]);
+    expect(results[0].status).toBe("ok");
+    expect(results[1].status).toBe("erro");
+    expect(results[1].message).toMatch(/não disponível/);
+    expect(results[2].status).toBe("ok");
+    expect(
+      loadSavedDraws("megasena")
+        .map((r) => r.concurso)
+        .sort((a, b) => a - b)
+    ).toEqual([3090, 3092]);
+  });
+
+  it("produz uma lista completa de itens de erro quando todos os concursos falham", async () => {
+    fetch.mockImplementation(() =>
+      Promise.resolve(jsonResponse(null, false, 500))
+    );
+
+    const results = await getDrawRange("megasena", [3090, 3091, 3092]);
+
+    expect(results).toHaveLength(3);
+    expect(results.every((r) => r.status === "erro")).toBe(true);
+  });
+
+  it("lote com parte dos concursos já salvos chama fetch só para os que faltam, na ordem do intervalo", async () => {
+    fetch.mockResolvedValueOnce(jsonResponse(drawPayload(3090)));
+    await getDraw("megasena", 3090);
+    fetch.mockClear();
+    fetch.mockImplementation((url) => {
+      const concurso = url.split("/").pop();
+      return Promise.resolve(jsonResponse(drawPayload(Number(concurso))));
+    });
+
+    const onProgress = vi.fn();
+    const results = await getDrawRange(
+      "megasena",
+      [3090, 3091, 3092],
+      onProgress
+    );
+
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(results.map((r) => r.concurso)).toEqual([3090, 3091, 3092]);
+    expect(results.every((r) => r.status === "ok")).toBe(true);
+    expect(onProgress).toHaveBeenCalledTimes(3);
+  });
+
+  it("um intervalo repetido inteiro não dispara nenhuma requisição", async () => {
+    fetch.mockImplementation((url) => {
+      const concurso = url.split("/").pop();
+      return Promise.resolve(jsonResponse(drawPayload(Number(concurso))));
+    });
+    await getDrawRange("megasena", [3090, 3091, 3092]);
+    fetch.mockClear();
+
+    const results = await getDrawRange("megasena", [3090, 3091, 3092]);
+
+    expect(fetch).not.toHaveBeenCalled();
+    expect(results.map((r) => r.concurso)).toEqual([3090, 3091, 3092]);
+    expect(results.every((r) => r.status === "ok")).toBe(true);
   });
 });

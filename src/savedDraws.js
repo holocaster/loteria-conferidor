@@ -67,3 +67,33 @@ export async function getLatestDraw(slug) {
   record(slug, draw);
   return draw;
 }
+
+// Mensagem de erro por item do modo de intervalo. HTTP 500 na API da Caixa
+// cobre tanto "concurso ainda não sorteado" quanto erro real do servidor —
+// a API não distingue os dois — por isso fala em "não disponível" e nunca
+// afirma que o concurso não existe. Não reaproveita a mensagem de fetchDraw,
+// que continua igual e é usada pelo modo de um concurso só.
+function rangeItemErrorMessage(concurso) {
+  return `Concurso ${concurso} não disponível (ainda não sorteado ou indisponível no momento).`;
+}
+
+// Busca vários concursos de uma loteria, sequencialmente, reutilizando
+// getDraw — cada um usa o salvo se existir ou busca e salva. A falha de um
+// concurso não propaga: vira um item de erro na posição dele (e não é
+// salvo) e a busca segue para os seguintes.
+export async function getDrawRange(slug, concursos, onProgress) {
+  const results = [];
+  for (let i = 0; i < concursos.length; i++) {
+    const concurso = concursos[i];
+    let item;
+    try {
+      const draw = await getDraw(slug, concurso);
+      item = { concurso, status: "ok", draw };
+    } catch {
+      item = { concurso, status: "erro", message: rangeItemErrorMessage(concurso) };
+    }
+    results.push(item);
+    if (onProgress) onProgress(item, i + 1, concursos.length);
+  }
+  return results;
+}

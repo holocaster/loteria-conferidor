@@ -1,9 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { LOTTERY_LIST, LOTTERIES } from "./lotteries";
-import { fetchDrawRange } from "./api";
 import { validateIntervalo } from "./intervalValidation";
 import { loadGames, addGame, removeGame } from "./storage";
-import { getDraw, getLatestDraw, loadSavedDraws, removeSavedDraw } from "./savedDraws";
+import {
+  getDraw,
+  getLatestDraw,
+  getDrawRange,
+  loadSavedDraws,
+  removeSavedDraw,
+} from "./savedDraws";
 import NumberPicker from "./NumberPicker";
 import DrawTicket from "./DrawTicket";
 import "./App.css";
@@ -113,13 +118,14 @@ export default function App() {
     setIntervalResults([]);
     setIntervalProgress({ done: 0, total: validated.concursos.length });
     try {
-      await fetchDrawRange(requestSlug, validated.concursos, (item, done, total) => {
+      await getDrawRange(requestSlug, validated.concursos, (item, done, total) => {
         if (activeSlugRef.current !== requestSlug) return;
         setIntervalResults((prev) => [...prev, item]);
         setIntervalProgress({ done, total });
       });
       if (activeSlugRef.current === requestSlug) {
         setIntervalProgress(null);
+        setSavedDraws(loadSavedDraws(requestSlug));
       }
     } catch (err) {
       if (activeSlugRef.current === requestSlug) {

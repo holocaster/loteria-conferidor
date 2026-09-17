@@ -67,6 +67,35 @@ test("modo intervalo busca todos os concursos e isola a falha de um deles", asyn
   );
 });
 
+test("intervalo buscado duas vezes dispara requisições só na primeira e aparece na lista de concursos salvos", async ({ page }) => {
+  let requestCount = 0;
+  await page.route("**/portaldeloterias/api/megasena/309*", (route) => {
+    requestCount++;
+    const concurso = Number(route.request().url().split("/").pop());
+    route.fulfill({ json: drawPayload({ concurso }) });
+  });
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Intervalo", exact: true }).click();
+  await page.getByLabel("Concurso inicial do intervalo").fill("3090");
+  await page.getByLabel("Concurso final do intervalo").fill("3092");
+  await page.getByRole("button", { name: "Buscar intervalo" }).click();
+
+  await expect(page.locator(".interval-list .ticket")).toHaveCount(3);
+  expect(requestCount).toBe(3);
+
+  await page.getByRole("button", { name: "Buscar intervalo" }).click();
+
+  await expect(page.locator(".interval-list .ticket")).toHaveCount(3);
+  await expect(page.locator(".interval-list")).toContainText("Concurso 3090");
+  await expect(page.locator(".interval-list")).toContainText("Concurso 3091");
+  await expect(page.locator(".interval-list")).toContainText("Concurso 3092");
+  expect(requestCount).toBe(3);
+
+  await page.getByText("Concursos salvos (3)").click();
+  await expect(page.locator(".saved-draw-open")).toHaveCount(3);
+});
+
 test("intervalo inválido mostra o erro de validação e não dispara busca", async ({ page }) => {
   let requested = false;
   await page.route("**/portaldeloterias/api/megasena/**", (route) => {
