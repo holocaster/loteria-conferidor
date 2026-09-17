@@ -4,7 +4,7 @@ context: docs/CONTEXT.md
 brief: docs/briefs/0002-concursos-pesquisados.md
 spec: docs/specs/0002-concursos-pesquisados.md
 tickets_index: tickets/0002-concursos-pesquisados/index.md
-active_ticket: null
+active_ticket: "02"
 base_sha: null
 head_sha: null
 review: null
