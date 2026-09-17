@@ -19,12 +19,13 @@ function jsonResponse(body, ok = true, status = 200) {
   };
 }
 
-function drawPayload(concurso) {
+function drawPayload(concurso, overrides = {}) {
   return {
     concurso,
     dataApuracao: "01/01/2024",
     listaDezenas: ["01", "02", "03", "04", "05", "06"],
     acumulado: false,
+    ...overrides,
   };
 }
 
@@ -139,5 +140,51 @@ describe("savedDraws", () => {
     expect(loadSavedDraws("megasena")).toEqual([
       { slug: "megasena", concurso: 3095, draw },
     ]);
+  });
+
+  it("getDraw não chama fetch de novo quando o concurso já está salvo", async () => {
+    fetch.mockResolvedValueOnce(jsonResponse(drawPayload(3090)));
+    await getDraw("megasena", 3090);
+
+    const draw = await getDraw("megasena", 3090);
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(draw.concurso).toBe(3090);
+  });
+
+  it("getDraw aceita o concurso pedido como string e acha o registro salvo com número", async () => {
+    fetch.mockResolvedValueOnce(jsonResponse(drawPayload(3090)));
+    await getDraw("megasena", 3090);
+
+    const draw = await getDraw("megasena", "3090");
+
+    expect(fetch).toHaveBeenCalledTimes(1);
+    expect(draw.concurso).toBe(3090);
+  });
+
+  it("getDraw não serve o salvo de uma loteria para outra mesmo com o mesmo número de concurso", async () => {
+    fetch.mockResolvedValueOnce(jsonResponse(drawPayload(100)));
+    await getDraw("megasena", 100);
+
+    fetch.mockResolvedValueOnce(jsonResponse(drawPayload(100)));
+    await getDraw("quina", 100);
+
+    expect(fetch).toHaveBeenCalledTimes(2);
+  });
+
+  it("getLatestDraw chama fetch mesmo com o concurso já salvo e atualiza o registro salvo", async () => {
+    fetch.mockResolvedValueOnce(jsonResponse(drawPayload(3095)));
+    await getDraw("megasena", 3095);
+
+    fetch.mockResolvedValueOnce(
+      jsonResponse(drawPayload(3095, { dataApuracao: "02/02/2024" }))
+    );
+    const draw = await getLatestDraw("megasena");
+
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(draw.data).toBe("02/02/2024");
+    const saved = loadSavedDraws("megasena");
+    expect(saved).toHaveLength(1);
+    expect(saved[0].draw.data).toBe("02/02/2024");
   });
 });

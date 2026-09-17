@@ -178,6 +178,42 @@ test("clicar num concurso salvo reabre o ticket conferido contra um jogo cadastr
   await expect(page.locator(".ticket .hit-count")).toContainText("6 acertos");
 });
 
+test("buscar o mesmo concurso duas vezes dispara uma requisição só e mostra o mesmo ticket", async ({ page }) => {
+  let requestCount = 0;
+  await page.route("**/portaldeloterias/api/megasena/3050", (route) => {
+    requestCount++;
+    route.fulfill({ json: drawPayload({ concurso: 3050 }) });
+  });
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Concurso específico" }).click();
+  await page.getByLabel("Número do concurso").fill("3050");
+  await page.getByRole("button", { name: "Buscar concurso" }).click();
+  await expect(page.locator(".ticket")).toContainText("Concurso 3050");
+
+  await page.getByRole("button", { name: "Buscar concurso" }).click();
+  await expect(page.locator(".ticket")).toContainText("Concurso 3050");
+
+  expect(requestCount).toBe(1);
+});
+
+test("Ver último sorteio dispara requisição mesmo com o concurso já salvo", async ({ page }) => {
+  let requestCount = 0;
+  await page.route("**/portaldeloterias/api/megasena", (route) => {
+    requestCount++;
+    route.fulfill({ json: drawPayload({ concurso: 3057 }) });
+  });
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Ver último sorteio" }).click();
+  await expect(page.locator(".ticket")).toContainText("Concurso 3057");
+
+  await page.getByRole("button", { name: "Ver último sorteio" }).click();
+  await expect(page.locator(".ticket")).toContainText("Concurso 3057");
+
+  expect(requestCount).toBe(2);
+});
+
 test("apagar um concurso salvo remove só aquele item da lista", async ({ page }) => {
   await mockConcurso(page, "megasena", 3050, drawPayload({ concurso: 3050 }));
   await mockConcurso(page, "megasena", 3051, drawPayload({ concurso: 3051 }));

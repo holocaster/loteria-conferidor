@@ -1,8 +1,9 @@
 // Guarda os concursos já buscados no navegador (localStorage), numa chave
 // própria — irmã da de storage.js (jogos fixos), nunca a mesma: apagar um
 // concurso salvo não pode arriscar um jogo fixo. Dono também da política de
-// quando usar o salvo em vez de ir à API (ainda não neste ticket: getDraw e
-// getLatestDraw sempre buscam por enquanto).
+// quando usar o salvo em vez de ir à API: getDraw usa o salvo sem requisição
+// quando existe; getLatestDraw sempre busca, pois pode ter saído um sorteio
+// novo desde a última vez.
 
 import { fetchDraw } from "./api";
 
@@ -48,7 +49,14 @@ export function removeSavedDraw(slug, concurso) {
   );
 }
 
+function findSaved(slug, concurso) {
+  const target = Number(concurso);
+  return loadAll().find((r) => r.slug === slug && Number(r.concurso) === target);
+}
+
 export async function getDraw(slug, concurso) {
+  const existing = findSaved(slug, concurso);
+  if (existing) return existing.draw;
   const draw = await fetchDraw(slug, concurso);
   record(slug, draw);
   return draw;
