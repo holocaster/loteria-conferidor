@@ -36,13 +36,9 @@ live only in `localStorage`. There is no server component to reason about.
   — the previous source (`api.guidi.dev.br`) silently failed in the browser
   because it didn't send `Access-Control-Allow-Origin`; that's the one thing
   a local/curl test won't catch.
-- **`src/lotteries.js`** — per-lottery config (`LOTTERIES`): how many
-  numbers to pick, valid range, and the minimum hit count that counts as a
-  prize (`prizeFrom`, used only for highlighting in the UI, not fetched
-  from the API). Also `countHits()` (numbers-in-common) and
-  `findPrizeValue()` (looks up the payout for a hit count in
-  `listaRateioPremio`, correctly slicing Dupla-Sena's doubled list by
-  segment/segments since it reports two draws per concurso).
+- **`src/lotteries.js`** — per-lottery config (`LOTTERIES`), `countHits()`,
+  and `findPrizeValue()` (payout lookup; Dupla-Sena's segment slicing is
+  explained inline in the file).
 - **`src/intervalValidation.js`** — pure validation for the "de/até" range
   mode; no fetch, no React. Caps a range at `MAX_INTERVALO` (25) — a product
   choice, not an API rate limit.
@@ -76,8 +72,7 @@ hoc commits:
 
 - `.ai/PROJECT_STATE.md` — current feature, active ticket, next action.
 - `docs/briefs/<NNNN-slug>.md` → `docs/specs/<NNNN-slug>.md` →
-  `tickets/<NNNN-slug>/NN-*.md` (each ticket has a matching
-  `NN-*.review.md`).
+  `tickets/<NNNN-slug>/NN-*.md`.
 
 Check `.ai/PROJECT_STATE.md` for what's in flight before starting new
 feature work.

@@ -25,9 +25,6 @@ Quantidade de dezenas do jogo fixo que coincidem com as dezenas sorteadas em um 
 
 ## Decisions
 
-**Fonte de resultados é a API da Caixa, não a de terceiros.**
-A API `api.guidi.dev.br`, usada na primeira versão do app, não envia header CORS — todo fetch direto do navegador era bloqueado, tornando o app inutilizável em qualquer ambiente. A API interna da Caixa (`servicebus2.caixa.gov.br`) libera CORS e devolve o mesmo formato de dados. Confirmado por teste direto, não presumido.
-
 **Concurso inexistente ou ainda não sorteado é um erro do servidor (HTTP 500), não 404.**
 A API da Caixa não distingui "não existe" de "erro interno" — ambos vêm como 500. Qualquer fluxo que busque um concurso específico (avulso ou em lote) precisa tratar 500 como "não disponível", não como falha de infraestrutura.
 
