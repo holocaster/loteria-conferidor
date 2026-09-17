@@ -1,13 +1,13 @@
-goal: Buscar intervalo de concursos e conferir jogos salvos contra todos eles
-feature: 0001-multi-concurso
+goal: Salvar automaticamente concursos já pesquisados (cache-first) e permitir apagar item a item
+feature: 0002-concursos-pesquisados
 context: docs/CONTEXT.md
-brief: docs/briefs/0001-multi-concurso.md
-spec: docs/specs/0001-multi-concurso.md
-tickets_index: tickets/0001-multi-concurso/index.md
+brief: docs/briefs/0002-concursos-pesquisados.md
+spec: docs/specs/0002-concursos-pesquisados.md
+tickets_index: tickets/0002-concursos-pesquisados/index.md
 active_ticket: null
 base_sha: null
 head_sha: null
 review: null
 review_round: 0
 blockers: []
-next_action: feature 0001-multi-concurso completa - todos os tickets done
+next_action: spawn sdd-planner para gerar spec e tickets de 0002-concursos-pesquisados
