@@ -113,6 +113,11 @@ describe("savedDraws", () => {
     expect(loadSavedDraws("megasena")).toEqual([]);
   });
 
+  it("loadSavedDraws devolve lista vazia quando o JSON salvo não é uma lista", () => {
+    localStorage.setItem("conferidor:concursos", "{}");
+    expect(loadSavedDraws("megasena")).toEqual([]);
+  });
+
   it("o registro salvo não guarda o campo raw", async () => {
     fetch.mockResolvedValue(jsonResponse(drawPayload(3090)));
 

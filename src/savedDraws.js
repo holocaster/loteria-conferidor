@@ -12,7 +12,8 @@ const KEY = "conferidor:concursos";
 function loadAll() {
   try {
     const raw = localStorage.getItem(KEY);
-    return raw ? JSON.parse(raw) : [];
+    const records = raw ? JSON.parse(raw) : [];
+    return Array.isArray(records) ? records : [];
   } catch {
     return [];
   }
