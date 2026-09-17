@@ -25,17 +25,23 @@ site (see "Architecture" below).
 results come from a direct `fetch` to a third-party API, and saved games
 live only in `localStorage`. There is no server component to reason about.
 
-- **`src/api.js`** — fetches and normalizes draw results from the Caixa API
-  (`servicebus2.caixa.gov.br`). `normalize()` tries several possible field
-  names per value (the API's shape varies slightly by endpoint/lottery) and
-  handles Dupla-Sena's second draw (`listaDezenasSegundoSorteio`)
-  separately from the first. `fetchDrawRange()` fetches a list of concursos
-  sequentially, isolating one concurso's failure from the rest (a failed
-  item becomes an inline error, not an aborted batch) — see `docs/CONTEXT.md`
-  for why. **Do not switch the data source without re-verifying CORS live**
-  — the previous source (`api.guidi.dev.br`) silently failed in the browser
-  because it didn't send `Access-Control-Allow-Origin`; that's the one thing
-  a local/curl test won't catch.
+- **`src/api.js`** — fetches and normalizes a single draw result from the
+  Caixa API (`servicebus2.caixa.gov.br`). `normalize()` tries several
+  possible field names per value (the API's shape varies slightly by
+  endpoint/lottery) and handles Dupla-Sena's second draw
+  (`listaDezenasSegundoSorteio`) separately from the first. **Do not switch
+  the data source without re-verifying CORS live** — the previous source
+  (`api.guidi.dev.br`) silently failed in the browser because it didn't
+  send `Access-Control-Allow-Origin`; that's the one thing a local/curl
+  test won't catch.
+- **`src/savedDraws.js`** — owns the "concurso salvo" domain: `localStorage`
+  cache of already-fetched draws (own key, sibling to `storage.js`'s), the
+  saved-first policy (serve from cache before hitting the API — except
+  "último sorteio", which always fetches), and `getDrawRange()`, which
+  fetches a list of concursos sequentially through that same saved-first
+  path, isolating one concurso's failure from the rest (a failed item
+  becomes an inline error, not an aborted batch, and is never cached) — see
+  `docs/CONTEXT.md` for why.
 - **`src/lotteries.js`** — per-lottery config (`LOTTERIES`), `countHits()`,
   and `findPrizeValue()` (payout lookup; Dupla-Sena's segment slicing is
   explained inline in the file).
@@ -60,10 +66,11 @@ live only in `localStorage`. There is no server component to reason about.
 `docs/CONTEXT.md` is the source of truth for domain terms (concurso,
 dezena, jogo fixo, acerto, Dupla-Sena's two draws) and for the reasoning
 behind the API choice, the "HTTP 500 means unavailable, not necessarily
-nonexistent" handling, the 25-item interval cap, and per-item failure
-isolation. Read it before changing `api.js` or the range-fetch flow — most
-non-obvious behavior there is a deliberate, previously-tested decision, not
-an oversight.
+nonexistent" handling, the 25-item interval cap, per-item failure
+isolation, and the saved-first caching policy. Read it before changing
+`api.js`, `savedDraws.js`, or the range-fetch flow — most non-obvious
+behavior there is a deliberate, previously-tested decision, not an
+oversight.
 
 ### Feature workflow (spec-driven)
 
