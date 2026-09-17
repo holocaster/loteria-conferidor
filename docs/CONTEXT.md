@@ -16,6 +16,10 @@ _Avoid_: número sorteado, bola.
 Conjunto de números que a pessoa cadastra e quer conferir repetidamente contra concursos futuros/passados. Salvo só no `localStorage` do navegador.
 _Avoid_: aposta, bilhete, cartela.
 
+**Concurso salvo**:
+Resultado completo de um concurso já buscado (dezenas, data, rateio de prêmio) e guardado localmente, para reabrir sem nova chamada à API. Diferente de jogo fixo: um é resultado de sorteio já buscado; o outro é aposta cadastrada pela pessoa para conferir.
+_Avoid_: histórico, cache (usar "concurso salvo" mesmo quando a implementação for tecnicamente um cache).
+
 **Dupla-Sena**:
 Única loteria com dois sorteios (1º e 2º) dentro do mesmo concurso — cada um com seu próprio conjunto de dezenas e sua própria faixa de premiação. Um jogo pode bater em um sorteio, no outro, nos dois ou em nenhum.
 _Avoid_: tratar como um sorteio único com o dobro de dezenas.
@@ -33,3 +37,15 @@ Decisão de produto, não limite técnico — a API não demonstrou rate limit e
 
 **Uma falha em um concurso do intervalo não aborta o restante.**
 Cada concurso do lote é buscado e reportado independentemente; um que falhar aparece como erro inline no lugar do seu resultado, os demais seguem normalmente.
+
+**Toda busca de concurso bem-sucedida é salva automaticamente.**
+Avulsa ou cada concurso dentro de um intervalo — resultado completo, não só o número. Concursos com erro (HTTP 500 = indisponível) nunca são salvos, pois não há resultado para guardar.
+
+**Buscar de novo um concurso já salvo carrega do que já está salvo, sem chamar a API.**
+Vale para concurso avulso e para concursos já salvos dentro de um novo intervalo. Exceção: o modo "último sorteio" sempre busca na API, pois pode ter saído um resultado novo — o retorno também atualiza o concurso salvo correspondente.
+
+**Apagar concurso salvo é só por item individual.**
+Sem apagar em lote ou por intervalo salvo como unidade — cada concurso salvo é um registro independente.
+
+**Sem limite de quantos concursos ficam salvos.**
+Decisão consciente para não adicionar complexidade de eviction sem necessidade demonstrada.
