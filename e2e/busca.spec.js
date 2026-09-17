@@ -17,6 +17,12 @@ async function mockConcurso(page, slug, concurso, body, status = 200) {
   );
 }
 
+async function pickNumbers(page, numbers) {
+  for (const n of numbers) {
+    await page.getByRole("button", { name: String(n).padStart(2, "0"), exact: true }).click();
+  }
+}
+
 test("modo concurso específico busca e mostra o concurso pedido", async ({ page }) => {
   await mockConcurso(page, "megasena", 3050, drawPayload({ concurso: 3050 }));
   await page.goto("/");
@@ -124,4 +130,73 @@ test("concurso acumulado mostra o valor estimado do próximo sorteio", async ({ 
   await expect(page.locator(".ticket-note")).toContainText("Acumulou!");
   await expect(page.locator(".ticket-note")).toContainText("R$ 45.000.000,00");
   await expect(page.locator(".ticket-note")).toContainText("20/09/2026");
+});
+
+test("concurso buscado com sucesso aparece na lista de concursos salvos", async ({ page }) => {
+  await mockConcurso(page, "megasena", 3050, drawPayload({ concurso: 3050 }));
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Concurso específico" }).click();
+  await page.getByLabel("Número do concurso").fill("3050");
+  await page.getByRole("button", { name: "Buscar concurso" }).click();
+  await expect(page.locator(".ticket")).toContainText("Concurso 3050");
+
+  await page.getByText("Concursos salvos (1)").click();
+  await expect(page.locator(".saved-draw-open")).toContainText("Concurso 3050");
+});
+
+test("concurso que respondeu 500 não aparece na lista de concursos salvos", async ({ page }) => {
+  await mockConcurso(page, "megasena", 9999, null, 500);
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Concurso específico" }).click();
+  await page.getByLabel("Número do concurso").fill("9999");
+  await page.getByRole("button", { name: "Buscar concurso" }).click();
+  await expect(page.locator(".status-error")).toContainText("status 500");
+
+  await expect(page.getByText(/Concursos salvos/)).toHaveCount(0);
+});
+
+test("clicar num concurso salvo reabre o ticket conferido contra um jogo cadastrado depois", async ({ page }) => {
+  await mockConcurso(page, "megasena", 3050, drawPayload({ concurso: 3050, listaDezenas: ["01", "02", "03", "04", "05", "06"] }));
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Concurso específico" }).click();
+  await page.getByLabel("Número do concurso").fill("3050");
+  await page.getByRole("button", { name: "Buscar concurso" }).click();
+  await expect(page.locator(".ticket")).toContainText("Concurso 3050");
+
+  await pickNumbers(page, [1, 2, 3, 4, 5, 6]);
+  await page.getByRole("button", { name: "Salvar jogo" }).click();
+  await expect(page.locator(".sidebar .game-item")).toHaveCount(1);
+
+  await page.getByText("Concursos salvos (1)").click();
+  await page.locator(".saved-draw-open").click();
+
+  await expect(page.locator(".ticket")).toContainText("Concurso 3050");
+  await expect(page.locator(".ticket .result-row")).toHaveCount(1);
+  await expect(page.locator(".ticket .hit-count")).toContainText("6 acertos");
+});
+
+test("apagar um concurso salvo remove só aquele item da lista", async ({ page }) => {
+  await mockConcurso(page, "megasena", 3050, drawPayload({ concurso: 3050 }));
+  await mockConcurso(page, "megasena", 3051, drawPayload({ concurso: 3051 }));
+  await page.goto("/");
+
+  await page.getByRole("button", { name: "Concurso específico" }).click();
+  await page.getByLabel("Número do concurso").fill("3050");
+  await page.getByRole("button", { name: "Buscar concurso" }).click();
+  await expect(page.locator(".ticket")).toContainText("Concurso 3050");
+
+  await page.getByLabel("Número do concurso").fill("3051");
+  await page.getByRole("button", { name: "Buscar concurso" }).click();
+  await expect(page.locator(".ticket")).toContainText("Concurso 3051");
+
+  await page.getByText("Concursos salvos (2)").click();
+  await page
+    .getByRole("button", { name: "Apagar concurso 3050 salvo" })
+    .click();
+
+  await expect(page.locator(".saved-draw-open")).toHaveCount(1);
+  await expect(page.locator(".saved-draw-open")).toContainText("Concurso 3051");
 });

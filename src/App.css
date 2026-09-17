@@ -232,6 +232,51 @@ input::placeholder {
   color: var(--coral);
 }
 
+/* ---------- Concursos salvos ---------- */
+
+.saved-draws {
+  margin: 6px 0 16px;
+}
+
+.saved-draws summary {
+  cursor: pointer;
+  color: var(--ink-soft);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+
+.saved-draws-list {
+  list-style: none;
+  margin: 10px 0 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.saved-draw-item {
+  background: var(--bg-deep);
+  border-radius: 6px;
+  padding: 10px 12px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  justify-content: space-between;
+}
+
+.saved-draw-open {
+  background: transparent;
+  border: none;
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+  display: flex;
+  gap: 10px;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+}
+
 /* ---------- Progress bar ---------- */
 
 .progress-wrap {

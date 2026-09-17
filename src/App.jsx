@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { LOTTERY_LIST, LOTTERIES } from "./lotteries";
-import { fetchDraw, fetchDrawRange } from "./api";
+import { fetchDrawRange } from "./api";
 import { validateIntervalo } from "./intervalValidation";
 import { loadGames, addGame, removeGame } from "./storage";
+import { getDraw, getLatestDraw, loadSavedDraws, removeSavedDraw } from "./savedDraws";
 import NumberPicker from "./NumberPicker";
 import DrawTicket from "./DrawTicket";
 import "./App.css";
@@ -28,6 +29,7 @@ export default function App() {
   const [ateInput, setAteInput] = useState("");
   const [intervalResults, setIntervalResults] = useState([]);
   const [intervalProgress, setIntervalProgress] = useState(null);
+  const [savedDraws, setSavedDraws] = useState(() => loadSavedDraws(activeSlug));
 
   const active = LOTTERIES[activeSlug];
 
@@ -51,6 +53,7 @@ export default function App() {
     setAteInput("");
     setIntervalResults([]);
     setIntervalProgress(null);
+    setSavedDraws(loadSavedDraws(activeSlug));
   }, [activeSlug]);
 
   const gamesForActive = useMemo(
@@ -72,17 +75,29 @@ export default function App() {
     setIntervalResults([]);
     setIntervalProgress(null);
     try {
-      const result = await fetchDraw(
-        active.slug,
-        useLatest ? undefined : concursoInput
-      );
+      const result = useLatest
+        ? await getLatestDraw(active.slug)
+        : await getDraw(active.slug, concursoInput);
       setDraw(result);
+      setSavedDraws(loadSavedDraws(active.slug));
     } catch (err) {
       setError(err.message);
       setDraw(null);
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleOpenSaved(item) {
+    setError(null);
+    setIntervalResults([]);
+    setIntervalProgress(null);
+    setDraw(item.draw);
+  }
+
+  function handleRemoveSaved(concurso) {
+    removeSavedDraw(active.slug, concurso);
+    setSavedDraws(loadSavedDraws(active.slug));
   }
 
   async function handleFetchRange() {
@@ -287,6 +302,34 @@ export default function App() {
                 </div>
               )}
             </>
+          )}
+
+          {savedDraws.length > 0 && (
+            <details className="saved-draws">
+              <summary>Concursos salvos ({savedDraws.length})</summary>
+              <ul className="saved-draws-list">
+                {savedDraws.map((item) => (
+                  <li key={item.concurso} className="saved-draw-item">
+                    <button
+                      type="button"
+                      className="saved-draw-open"
+                      onClick={() => handleOpenSaved(item)}
+                    >
+                      <span>Concurso {item.concurso}</span>
+                      {item.draw.data && <span>{item.draw.data}</span>}
+                    </button>
+                    <button
+                      type="button"
+                      className="remove-btn"
+                      onClick={() => handleRemoveSaved(item.concurso)}
+                      aria-label={`Apagar concurso ${item.concurso} salvo`}
+                    >
+                      apagar
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </details>
           )}
 
           {loading && mode !== "intervalo" && (
