@@ -6,7 +6,7 @@ Spec: `docs/specs/0002-concursos-pesquisados.md`
 |---|-------|-----------|--------|
 | 01 | Concurso buscado fica salvo e aparece numa lista dentro do card | none | done |
 | 02 | Buscar de novo um concurso salvo não chama a API | 01 | done |
-| 03 | Intervalo salva cada concurso e aproveita os que já estão salvos | 02 | ready |
+| 03 | Intervalo salva cada concurso e aproveita os que já estão salvos | 02 | done |
 
 01 é o tracer bullet: persistência, salvamento automático no modo avulso e
 no último sorteio, e a lista recolhível com reabrir e apagar. 02 fecha a
